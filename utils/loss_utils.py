@@ -68,8 +68,10 @@ def ssim(img1, img2, window_size=11, size_average=True):
     # Create a Gaussian window.
     window = create_window(window_size, channel)
 
+    # Match the device (GPU/CPU) of the window tensor to img1.
     if img1.is_cuda:
         window = window.cuda(img1.get_device())
+    # Match the data type of the window tensor to img1.
     window = window.type_as(img1)
 
     return _ssim(img1, img2, window, window_size, channel, size_average)
@@ -84,6 +86,7 @@ def _ssim(img1, img2, window, window_size, channel, size_average=True):
     mu2_sq = mu2.pow(2)
     mu1_mu2 = mu1 * mu2
 
+    # sigma_sq (= Variance) = E(X^2) - (E(X))^2
     sigma1_sq = F.conv2d(img1 * img1, window, padding=window_size // 2, groups=channel) - mu1_sq
     sigma2_sq = F.conv2d(img2 * img2, window, padding=window_size // 2, groups=channel) - mu2_sq
     sigma12 = F.conv2d(img1 * img2, window, padding=window_size // 2, groups=channel) - mu1_mu2
