@@ -37,9 +37,11 @@ C2 = 0.03 ** 2
 #         grad = fusedssim_backward(C1, C2, img1, img2, opt_grad)
 #         return None, None, grad, None
 
+# In machine learning, L1 loss is also known as Mean Absolute Error (MAE).
 def l1_loss(network_output, gt):
     return torch.abs((network_output - gt)).mean()
 
+# In machine learning, L2 loss is also known as Mean Squared Error (MSE).
 # def l2_loss(network_output, gt):
 #     return ((network_output - gt) ** 2).mean()
 
@@ -47,14 +49,23 @@ def gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
     return gauss / gauss.sum()
 
+# Create a 2D Gaussian window
 def create_window(window_size, channel):
+    # Generate a 1D Gaussian filter with a given window size.
     _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
+    # Convert the 1D Gaussian filter into a 2D Gaussian filter.
     _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
+    # Expand the 2D Gaussian filter to match the number of channels (For an RGB image, it applies the same filter to R, G, and B channels).
     window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
+
     return window
 
+# SSIM (Structural Similarity Index Measure)
+# Unlike L1 or L2 loss, which only measure pixel-wise differences, SSIM evaluates image quality based on structural similarity, making it more aligned with human visual perception.
 def ssim(img1, img2, window_size=11, size_average=True):
+    # Extract the number of channels.
     channel = img1.size(-3)
+    # Create a Gaussian window.
     window = create_window(window_size, channel)
 
     if img1.is_cuda:
@@ -64,6 +75,8 @@ def ssim(img1, img2, window_size=11, size_average=True):
     return _ssim(img1, img2, window, window_size, channel, size_average)
 
 def _ssim(img1, img2, window, window_size, channel, size_average=True):
+    # Computes the local mean (mu) of img1 and img2 using a Gaussian window.
+    # Since PyTorch's conv2d function inherently applies a sliding window, there is no need to manually move the window using a for-loop.
     mu1 = F.conv2d(img1, window, padding=window_size // 2, groups=channel)
     mu2 = F.conv2d(img2, window, padding=window_size // 2, groups=channel)
 
