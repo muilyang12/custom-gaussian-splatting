@@ -18,13 +18,10 @@ import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import safe_state
 import uuid
-from tqdm import tqdm
-from utils.image_utils import psnr
 from argparse import ArgumentParser, Namespace
 from arguments import ModelParams, PipelineParams, OptimizationParams
 
-def training(dataset, opt, pipe, testing_iterations, saving_iterations):
-    first_iter = 0
+def training(dataset, opt, pipe, saving_iterations):
     prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians)
@@ -34,9 +31,8 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations):
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")
 
     viewpoint_stack = None
-    ema_loss_for_log = 0.0
-    first_iter += 1
-    for iteration in range(first_iter, opt.iterations + 1):        
+
+    for iteration in range(opt.iterations):        
         gaussians.update_learning_rate(iteration)
 
         # Every 1000 its we increase the levels of SH up to a maximum degree
@@ -102,13 +98,9 @@ if __name__ == "__main__":
     lp = ModelParams(parser)
     op = OptimizationParams(parser)
     pp = PipelineParams(parser)
-    parser.add_argument('--debug_from', type=int, default=-1)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 15_000])
     parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 15_000])
     parser.add_argument("--quiet", action="store_true")
-    parser.add_argument("--checkpoint_iterations", nargs="+", type=int, default=[])
-    parser.add_argument("--start_checkpoint", type=str, default = None)
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
     
@@ -118,7 +110,7 @@ if __name__ == "__main__":
     safe_state(args.quiet)
 
     torch.autograd.set_detect_anomaly(args.detect_anomaly)
-    training(lp.extract(args), op.extract(args), pp.extract(args), args.test_iterations, args.save_iterations)
+    training(lp.extract(args), op.extract(args), pp.extract(args), args.save_iterations)
 
     # All done
     print("\nTraining complete.")
