@@ -32,7 +32,7 @@ def training(dataset, opt, pipe, saving_iterations):
 
     viewpoint_stack = None
 
-    for iteration in range(opt.iterations):        
+    for iteration in range(1, opt.iterations + 1):        
         gaussians.update_learning_rate(iteration)
 
         # Every 1000 its we increase the levels of SH up to a maximum degree
