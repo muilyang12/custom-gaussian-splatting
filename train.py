@@ -99,7 +99,7 @@ if __name__ == "__main__":
     op = OptimizationParams(parser)
     pp = PipelineParams(parser)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
-    parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 15_000])
+    parser.add_argument("--save_iterations", nargs="+", type=int, default=[5_000])
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(sys.argv[1:])
     args.save_iterations.append(args.iterations)
